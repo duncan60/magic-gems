@@ -1,0 +1,142 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <title>魔法寶石消除</title>
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <main class="app">
+    <header class="hud">
+      <div class="title">
+        <div class="logo">MAGIC GEMS</div>
+        <div class="subtitle">像素風經典消除</div>
+      </div>
+      <div class="stats">
+        <div class="stat">
+          <div class="label">分數</div>
+          <div id="score" class="value">0</div>
+        </div>
+        <div class="stat">
+          <div class="label">最佳</div>
+          <div id="best" class="value">0</div>
+        </div>
+        <div class="stat">
+          <div class="label">步數</div>
+          <div id="moves" class="value">0</div>
+        </div>
+        <div class="stat">
+          <div class="label">時間</div>
+          <div id="timer" class="value">90</div>
+        </div>
+        <div class="stat">
+          <div class="label">失誤</div>
+          <div id="mistakes" class="value">0/3</div>
+        </div>
+      </div>
+      <div class="actions">
+        <button id="newGame" class="btn">新遊戲</button>
+        <button id="loadGame" class="btn ghost">載入存檔</button>
+        <button id="clearSave" class="btn ghost">清除存檔</button>
+        <button id="rulesBtn" class="btn ghost">遊戲說明</button>
+      </div>
+    </header>
+
+    <section class="board-wrap">
+      <div id="board" class="board" aria-label="魔法寶石棋盤" role="grid"></div>
+      <div id="message" class="message"></div>
+      <div id="combo" class="combo hidden"></div>
+      <div id="startScreen" class="overlay" role="dialog" aria-modal="true">
+        <div class="panel">
+          <div class="over-title">MAGIC GEMS</div>
+          <div class="over-reason">像素風經典消除</div>
+          <div class="over-stats">最佳紀錄：<span id="startBest">0</span></div>
+          <div class="start-actions">
+            <button id="startBtn" class="btn">開始遊戲</button>
+            <button id="startLoadBtn" class="btn ghost">載入存檔</button>
+          </div>
+        </div>
+      </div>
+      <div id="gameOver" class="overlay hidden" role="dialog" aria-modal="true">
+        <div class="panel">
+          <div class="over-title">Game Over</div>
+          <div id="overReason" class="over-reason"></div>
+          <div class="over-stats">
+            <div>分數：<span id="overScore">0</span></div>
+            <div>最佳：<span id="overBest">0</span></div>
+            <div>步數：<span id="overMoves">0</span></div>
+            <div>剩餘時間：<span id="overTime">0</span></div>
+            <div>失誤：<span id="overMistakes">0/3</span></div>
+          </div>
+          <button id="restart" class="btn danger">重新開始</button>
+        </div>
+      </div>
+    </section>
+
+    <div id="rulesModal" class="rules-backdrop hidden" role="dialog" aria-modal="true" aria-label="遊戲說明">
+      <div class="rules-panel">
+        <div class="over-title">遊戲說明</div>
+
+        <div class="rules-section">
+          <div class="rules-heading">基本規則</div>
+          <ul class="rules-list">
+            <li>點擊一顆寶石，再點擊相鄰寶石交換位置</li>
+            <li>交換後若形成 3 顆以上同色相連即可消除</li>
+            <li>消除後寶石自動下落，可觸發多次連鎖反應</li>
+            <li>限時 90 秒，時間歸零則遊戲結束</li>
+            <li>無效交換計為失誤，累計 3 次遊戲結束</li>
+            <li>無法移動時棋盤自動重排（不扣分、不計失誤）</li>
+          </ul>
+        </div>
+
+        <div class="rules-section">
+          <div class="rules-heading">特殊寶石</div>
+          <div class="rules-specials">
+            <div class="rules-special-item">
+              <div class="gem-demo sp-row-demo"></div>
+              <div>
+                <div class="rules-special-name">橫向炸彈</div>
+                <div class="rules-special-desc">橫向 4 連消除時產生，下次被消除時清除整列</div>
+              </div>
+            </div>
+            <div class="rules-special-item">
+              <div class="gem-demo sp-col-demo"></div>
+              <div>
+                <div class="rules-special-name">縱向炸彈</div>
+                <div class="rules-special-desc">縱向 4 連消除時產生，下次被消除時清除整欄</div>
+              </div>
+            </div>
+            <div class="rules-special-item">
+              <div class="gem-demo sp-color-demo"></div>
+              <div>
+                <div class="rules-special-name">彩虹寶石</div>
+                <div class="rules-special-desc">5 連以上消除時產生，下次被消除時清除棋盤上所有相同顏色的寶石</div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="rules-section">
+          <div class="rules-heading">計分方式</div>
+          <ul class="rules-list">
+            <li>每消除 1 顆普通寶石：<span class="rules-score">+10 分</span></li>
+            <li>特殊寶石觸發的連帶消除同樣計分</li>
+            <li>連鎖反應（COMBO）分數依消除數量累加</li>
+            <li>最高分數自動記錄為最佳紀錄</li>
+          </ul>
+        </div>
+
+        <button id="rulesClose" class="btn">關閉</button>
+      </div>
+    </div>
+
+    <footer class="tips">
+      點擊一顆寶石，再點擊相鄰的寶石來交換。只要能形成 3 顆以上相連就會消除並掉落。
+      遊戲會自動存檔在本機瀏覽器。
+    </footer>
+  </main>
+
+  <script src="game.js"></script>
+</body>
+</html>
