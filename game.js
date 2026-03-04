@@ -53,6 +53,9 @@ let timerId = null;
 let gameOver = false;
 let gameStarted = false;
 let lastPlayerSwap = null; // { a: {row,col}, b: {row,col} }
+let touchStartX = 0;
+let touchStartY = 0;
+let touchStartTileEl = null;
 
 function randomGem() {
   return Math.floor(Math.random() * TYPES);
@@ -726,6 +729,58 @@ function endGame(text) {
   showGameOver(text);
   saveState();
 }
+
+boardEl.addEventListener("touchstart", (e) => {
+  if (locked || gameOver || !gameStarted) return;
+  const tileEl = e.target.closest(".tile");
+  if (!tileEl) return;
+  touchStartX = e.changedTouches[0].screenX;
+  touchStartY = e.changedTouches[0].screenY;
+  touchStartTileEl = tileEl;
+}, { passive: true });
+
+boardEl.addEventListener("touchend", (e) => {
+  const startTileEl = touchStartTileEl;
+  touchStartTileEl = null; // Unconditionally clear to prevent stale state
+  
+  if (!startTileEl || locked || gameOver || !gameStarted) return;
+  
+  const touchEndX = e.changedTouches[0].screenX;
+  const touchEndY = e.changedTouches[0].screenY;
+  const dx = touchEndX - touchStartX;
+  const dy = touchEndY - touchStartY;
+  
+  // If the swipe is very short, treat it as a tap.
+  // The browser will synthesize a click event which our click handler will process.
+  if (Math.abs(dx) < 30 && Math.abs(dy) < 30) {
+    return;
+  }
+  
+  const startRow = Number(startTileEl.dataset.row);
+  const startCol = Number(startTileEl.dataset.col);
+  let targetRow = startRow;
+  let targetCol = startCol;
+  
+  if (Math.abs(dx) > Math.abs(dy)) {
+    if (dx > 0) targetCol++; else targetCol--;
+  } else {
+    if (dy > 0) targetRow++; else targetRow--;
+  }
+  
+  if (targetRow < 0 || targetRow >= SIZE || targetCol < 0 || targetCol >= SIZE) return;
+  
+  const targetTileObj = tileAt(targetRow, targetCol);
+  if (!targetTileObj) return;
+
+  if (!selected || selected.row !== startRow || selected.col !== startCol) {
+    const previous = boardEl.querySelector(".tile.selected");
+    if (previous) previous.classList.remove("selected");
+    selected = { row: startRow, col: startCol };
+    startTileEl.classList.add("selected");
+  }
+  
+  handleTileClick({ target: targetTileObj.el });
+});
 
 boardEl.addEventListener("click", handleTileClick);
 
